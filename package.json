@@ -1,0 +1,22 @@
+{
+	"name": "api",
+	"version": "1.0.0",
+	"description": "",
+	"engines": {
+		"node": "13.10.1"
+	},
+	"main": "index.js",
+	"scripts": {
+		"dev": "nodemon server.js",
+		"start": "node server.js"
+	},
+	"author": "",
+	"license": "MIT",
+	"dependencies": {
+		"cors": "^2.8.5",
+		"express": "^4.17.1"
+	},
+	"devDependencies": {
+		"nodemon": "^2.0.2"
+	}
+}
