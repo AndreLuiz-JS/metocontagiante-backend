@@ -7,6 +7,7 @@ const DevotionalController = require("./controllers/DevotionalController");
 routes.get('/bible', BibleController.index);
 routes.get('/bible/:bookName', BibleController.showBook);
 routes.get('/bible/:bookName/:chapterNumber', BibleController.showChapter);
+routes.get('/bible/:bookName/:chapterNumber/:verseRange', BibleController.showVerseRange);
 
 routes.get('/devotional', DevotionalController.index);
 routes.post('/devotional', DevotionalController.create);

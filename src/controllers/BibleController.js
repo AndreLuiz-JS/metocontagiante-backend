@@ -70,5 +70,33 @@ module.exports = {
         }
         if (onlyCountVerses) return res.json({ chapterNumber, paragraphCount, versesCount })
         return res.json({ chapterNumber, paragraphCount, versesCount, paragraphs });
+    },
+    showVerseRange(req, res) {
+        const bookName = req.params.bookName;
+        const chapterNumber = req.params.chapterNumber;
+        const verseRange = req.params.verseRange;
+        const verseInit = Number(verseRange.split('-')[ 0 ]);
+        const verseEnd = Number(verseRange.split('-')[ 1 ]);
+        let booleanInitReturn = false;
+        let booleanEndReturn = true;
+        const response = getOneChapter(bookName, chapterNumber);
+        const chapterContent = response.paragraphs;
+        const versesContent = [];
+        for (let i = 0; i < chapterContent.length; i++) {
+            const paragraph = chapterContent[ i ];
+            const paragraphContent = [];
+            for (let j = 0; j < paragraph.length; j++) {
+                const verseFragment = paragraph[ j ];
+                if (verseFragment.verseNumber !== "") {
+                    if (Number(verseFragment.verseNumber) >= verseInit) booleanInitReturn = true;
+                    if (Number(verseFragment.verseNumber) > verseEnd) booleanEndReturn = false;
+                }
+                if (booleanInitReturn && booleanEndReturn) {
+                    paragraphContent.push(verseFragment)
+                }
+            }
+            if (paragraphContent.length > 0) versesContent.push(paragraphContent)
+        }
+        return res.json(versesContent);
     }
 }
