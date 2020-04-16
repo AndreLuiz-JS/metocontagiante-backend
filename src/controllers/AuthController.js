@@ -42,7 +42,7 @@ module.exports = {
             .orderBy('level', 'desc');
         const user_type = response.map(element => element.user_type);
         const hasManagePrivilegies = user_type.includes('post_user');
-        if (hasManagePrivilegies) console.log(`${user.name}:${user.email} authenticated as ${user.user_type}`);
+        if (hasManagePrivilegies) console.log(`${user.name}:${user.email} authenticated as ${user.user_type} at ${new Date().toISOString()}`);
 
         const user_info = { name: user.name, email: user.email, user_type: user.user_type };
         if (user.access_level >= 0) return res.json({ auth: true, user_info, user_types: user_type });
