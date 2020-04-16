@@ -17,12 +17,17 @@ routes.get('/devotional', DevotionalController.index);
 routes.post('/user', UserController.create);
 routes.post('/auth', AuthController.login);
 
+//Rotas autenticadas
+
+routes.get('/auth', authmiddleware, AuthController.auth);
+
+routes.get('/devotional/all', authmiddleware, DevotionalController.listAll);
 routes.post('/devotional', authmiddleware, DevotionalController.create);
 
 routes.get('/user', authmiddleware, UserController.index);
 routes.put('/user', authmiddleware, UserController.update);
 
-routes.patch('/user/admin', authmiddleware, UserController.changeRights)
+routes.patch('/user', authmiddleware, UserController.changeRights)
 
 
 

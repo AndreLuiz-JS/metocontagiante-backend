@@ -3,40 +3,47 @@ const jwt = require('jsonwebtoken');
 const connection = require('../database/connection');
 const generateUniqueId = require('../utils/generateUniqueId');
 const bcrypt = require('../utils/bcrypt');
-const master_level = 50;
-const admin_level = 10;
-const post_level = 5;
-const user_level = 0;
-const banned_level = -5;
 
 module.exports = {
     async index(req, res) {
         const { userId } = req;
-        const { name, email, access_level } = await connection('users').select('*').where('id', userId).first();
-        if (Number(access_level) < admin_level) return res.status(403).json({ error: 'Admin access level required.' });
-        console.log(`User ${name}: ${email} get a list of all users.`);
-        const users = await connection('users').select('name', ' email', ' access_level');
-        return res.json(users);
+        try {
+            const { name, email, access_level } = await connection('users')
+                .select('*')
+                .where('id', userId)
+                .first();
+
+            const admin = await connection('users_access')
+                .where('user_type', 'administrator_user')
+                .select('level')
+                .first();
+            if (Number(access_level) < admin.level) return res.status(403).json({ error: 'Admin access level required.' });
+            const users =
+                await connection('users')
+                    .select('name', ' email', ' access_level')
+                    .where('access_level', '<', access_level)
+                    .orWhere('access_level', access_level);
+
+            console.log(`User ${name}: ${email} get a list of all users.`);
+            return res.json({ users });
+        } catch (err) {
+            console.log(err);
+            return res.status(400).json({ error: 'Cannot get a list of users' })
+        }
     },
     async create(req, res) {
         const id = generateUniqueId();
         const { name, email, password } = req.body;
         const hash = await bcrypt.encrypt(password);
-        const access_level = (
-            email === process.env.ADMIN_EMAIL
-            && password === process.env.SECRET_HASH
-        ) ? master_level : user_level;
         try {
             await connection('users').insert({
                 id,
                 name,
                 email,
-                password: hash,
-                access_level
+                password: hash
             });
             const token = jwt.sign({ id }, process.env.SECRET_HASH, { expiresIn: '5 days' });
-            console.log(`${name} is now Master Admin`);
-            return res.json({ email, token })
+            return res.json({ token })
         } catch (err) {
             return res.status(400).json({ error: `${email} already registred.`, code: err.code })
         }
@@ -49,64 +56,70 @@ module.exports = {
             .select('*')
             .first();
 
-        if (!await bcrypt.compare(password, user.password)) return res.status(404).json({ error: 'Invalid password.' });
+        if (!user) return res.status(400).json({ error: 'Invalid token' });
 
-        if (name && name !== user.name)
-            try {
-                await connection('users')
-                    .where({ id: userId })
-                    .update({ name });
-                return res.json({ info: 'Name changed.' });
-            } catch (err) {
-                return res.status(400).json({ error: 'Name is null.' });
-            }
-        if (email && email !== user.email)
-            try {
-                await connection('users')
-                    .where('id', userId)
-                    .update({
-                        email,
-                    });
-                return res.json({ info: 'Email changed.' });
-            } catch (err) {
-                return res.status(400).json({ error: 'Email already registred or null.' });
-            }
-        if (newPassword && newPassword !== password)
-            try {
-                const hash = await bcrypt.encrypt(newPassword);
-                await connection('users')
-                    .where('id', userId)
-                    .update({
-                        password: hash,
-                    });
-                return res.json({ info: 'Password changed.' });
-            } catch (err) {
-                return res.status(400).json({ error: 'Password cannot be changed.' });
-            }
-        return res.status(304).json({ info: 'Nothing to change' })
+        if (!await bcrypt.compare(password, user.password)) return res.status(403).json({ error: 'Invalid password.' });
+
+        if (newPassword) {
+            const hash = await bcrypt.encrypt(newPassword);
+            await connection('users')
+                .where({ id: userId })
+                .update({
+                    password: hash
+                });
+        }
+        if (email && email !== user.email) {
+            const registredEmail = await connection('users')
+                .select('email')
+                .where('email', email)
+                .first();
+            if (registredEmail) return res.status(400).json({ error: 'Email já registrado' });
+            await connection('users')
+                .where({ id: userId })
+                .update({
+                    email
+                });
+        }
+        if (name) {
+            await connection('users')
+                .where({ id: userId })
+                .update({
+                    name
+                });
+        }
+
+        return res.json({ info: 'Dados atualizados.' })
     },
     async changeRights(req, res) {
         const { userId } = req;
-        const { email, password, emailToChangeAccess, newAccessLevel } = req.body;
+        const { email, password, emailToChangeAccess, user_type } = req.body;
+        const admin = await connection('users_access')
+            .select('level')
+            .where('user_type', 'administrator_user')
+            .first();
 
         const user = await connection('users')
             .where('id', userId)
             .select('name', 'email', 'password', 'access_level')
             .first();
-        if (user.access_level < admin_level) return res.status(403).json({ error: 'Forbidden' });
 
+        if (!user || user.access_level < admin.level) return res.status(403).json({ error: 'Forbidden' });
+        if (user.email !== email) return res.status(400).json({ error: 'Email incorreto.' });
         if (!await bcrypt.compare(password, user.password)) return res.status(404).json({ error: 'Invalid password.' });
 
-        try {
-            const access_level = Math.min(user.access_level, newAccessLevel);
-            await connection('users')
-                .where('email', emailToChangeAccess)
-                .update('access_level', access_level);
-            console.log(`User ${user.name}: ${user.email} changed access level of ${emailToChangeAccess} to ${newAccessLevel}`);
-            return res.json({ info: `User access level ${emailToChangeAccess} changed.` })
-        } catch (err) {
-            return res.status(400).json({ error: 'No connection to database', err })
-        }
+        const newAccess = await connection('users_access')
+            .select('level')
+            .where('user_type', user_type)
+            .first();
+        if (!newAccess) return res.status(400).json({ error: 'Invalid user type.' });
+
+        const user_level = Math.min(user.access_level, newAccess.level);
+        const userToChangeRights = await connection('users')
+            .where('email', emailToChangeAccess)
+            .update('access_level', user_level);
+        if (!userToChangeRights) return res.status(404).json({ error: 'User not found.' });
+        console.log(`User ${user.name}: ${user.email} changed access level of ${emailToChangeAccess} to ${user_level}`);
+        return res.json({ info: `User access level ${emailToChangeAccess} changed.` })
 
     }
 
