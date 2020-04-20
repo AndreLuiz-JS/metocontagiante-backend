@@ -76,7 +76,7 @@ module.exports = {
         const chapterNumber = req.params.chapterNumber;
         const verseRange = req.params.verseRange;
         const verseInit = Number(verseRange.split('-')[ 0 ]);
-        const verseEnd = Number(verseRange.split('-')[ 1 ]);
+        const verseEnd = (verseRange.split('-').length === 2) ? Number(verseRange.split('-')[ 1 ]) : verseInit;
         let booleanInitReturn = false;
         let booleanEndReturn = true;
         const response = getOneChapter(bookName, chapterNumber);

@@ -10,6 +10,7 @@ module.exports = {
             const user = await connection('users')
                 .select('*')
                 .where('email', email)
+                .where('access_level', '>=', 0)
                 .first();
             if (!await bcrypt.compare(password, user.password)) return res.status(404).json({ error: 'Invalid password.' })
             if (user.change_pwd) {
@@ -26,7 +27,7 @@ module.exports = {
             return res.status(400).json(err)
         }
     },
-    async auth(req, res) {
+    async index(req, res) {
         const { userId } = req;
         const user = await connection('users')
             .join('users_access', 'users.access_level', '=', 'users_access.level')

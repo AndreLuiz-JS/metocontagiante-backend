@@ -12,7 +12,6 @@ module.exports = {
                 .select('*')
                 .where('id', userId)
                 .first();
-
             const admin = await connection('users_access')
                 .where('user_type', 'administrator_user')
                 .select('level')
@@ -20,15 +19,20 @@ module.exports = {
             if (Number(access_level) < admin.level) return res.status(403).json({ error: 'Admin access level required.' });
             const users =
                 await connection('users')
-                    .select('name', ' email', ' access_level')
+                    .innerJoin('users_access', 'users.access_level', 'users_access.level')
+                    .select('name', ' email', ' access_level', 'user_type')
                     .where('access_level', '<', access_level)
-                    .orWhere('access_level', access_level);
+                    .orderBy('access_level', 'desc');
+            const usersTypes = await connection('users_access')
+                .select('user_type')
+                .where('level', '<=', access_level)
+                .orderBy('level', 'desc');
 
             console.log(`User ${name}: ${email} get a list of all users.`);
-            return res.json({ users });
+            return res.json({ users, usersTypes: usersTypes.map(element => element.user_type) });
         } catch (err) {
-            console.log(err);
-            return res.status(400).json({ error: 'Cannot get a list of users' })
+            console.log(err)
+            return res.status(400).json({ error: 'Token not valid.' })
         }
     },
     async create(req, res) {
@@ -93,6 +97,7 @@ module.exports = {
     async changeRights(req, res) {
         const { userId } = req;
         const { email, password, emailToChangeAccess, user_type } = req.body;
+        console.log(req.body)
         const admin = await connection('users_access')
             .select('level')
             .where('user_type', 'administrator_user')

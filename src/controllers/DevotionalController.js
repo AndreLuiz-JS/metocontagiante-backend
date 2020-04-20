@@ -22,20 +22,37 @@ module.exports = {
             .select('name', 'access_level', 'email', 'user_type')
             .where('id', userId)
             .first();
-        if (!user) return res.status(403).json({ error: 'Invalid credentials.' });
-        const { level: revisor_level } = await connection('users_access')
-            .select('level')
-            .where('user_type', 'revisor_user')
-            .first();
-        if (user.access_level < revisor_level) return res.status(403).json({ error: 'No access to this feature.' });
-        const devotionals = await connection('devotional')
-            .innerJoin('users', 'users.id', 'devotional.user_id')
-            .innerJoin('users_access', 'users.access_level', 'users_access.level')
-            .limit(30)
-            .select('devotional.id', 'title', 'verses', 'content', 'visible', 'available_at', 'created_at', 'name', 'email', 'user_type')
-            .orderBy('created_at', 'desc');
 
-        return res.json(devotionals);
+        if (!user) return res.status(403).json({ error: 'Invalid token provided.' });
+
+        const { level: post_level } = await connection('users_access')
+            .select('level')
+            .where('user_type', 'post_user')
+            .first();
+        if (user.access_level < post_level) return res.status(403).json({ error: 'No access to this feature.' });
+
+        if (user.access_level === post_level) {
+            const devotionals = await connection('devotional')
+                .innerJoin('users', 'users.id', 'devotional.user_id')
+                .innerJoin('users_access', 'users.access_level', 'users_access.level')
+                .limit(30)
+                .select('devotional.id', 'title', 'verses', 'content', 'visible', 'available_at', 'created_at', 'name', 'email', 'user_type')
+                .where('users.id', userId)
+                .andWhere('visible', 0)
+                .orderBy('created_at', 'desc');
+
+            return res.json(devotionals);
+        }
+        if (user.access_level > post_level) {
+            const devotionals = await connection('devotional')
+                .innerJoin('users', 'users.id', 'devotional.user_id')
+                .innerJoin('users_access', 'users.access_level', 'users_access.level')
+                .limit(30)
+                .select('devotional.id', 'title', 'verses', 'content', 'visible', 'available_at', 'created_at', 'name', 'email', 'user_type')
+                .orderBy('created_at', 'desc');
+
+            return res.json(devotionals);
+        }
 
     },
     async create(req, res) {
@@ -55,7 +72,7 @@ module.exports = {
             .where('user_type', 'post_user')
             .first();
         if (user.access_level < post_level) return res.status(403).json({ error: 'No rights to post.' });
-        if (user.access_level = post_level) {
+        if (user.access_level === post_level) {
             const devotional = await connection('devotional').insert({
                 user_id: userId,
                 title,
@@ -80,5 +97,74 @@ module.exports = {
             return res.json({ id: devotional, title, verses, content, available_at })
         }
 
+    },
+    async edit(req, res) {
+        const { userId } = req;
+        const { id, title, verses, content, available_at, visible } = req.body;
+        const now = new Date();
+        const created_at = now.toISOString();
+        const user = await connection('users')
+            .innerJoin('users_access', 'users.access_level', 'users_access.level')
+            .select('name', 'access_level', 'email', 'user_type')
+            .where('id', userId)
+            .first();
+        if (!user) return res.status(403).json({ error: 'Invalid credentials.' });
+
+        const { level: post_level } = await connection('users_access')
+            .select('level')
+            .where('user_type', 'post_user')
+            .first();
+
+        if (user.access_level < post_level) return res.status(403).json({ error: 'No rights to change devotional.' });
+
+        if (user.access_level === post_level) {
+            const devotional = await connection('devotional')
+                .update({
+                    title,
+                    verses,
+                    content,
+                    available_at,
+                })
+                .where('id', id)
+                .andWhere('user_id', userId)
+                .andWhere('visible', false);
+            return res.json({ id: devotional.id, title, verses, content, available_at });
+        }
+        if (user.access_level > post_level) {
+            const devotional = await connection('devotional')
+                .update({
+                    title,
+                    verses,
+                    content,
+                    available_at,
+                    visible
+                })
+                .where('id', id);
+            return res.json({ id: devotional.id, title, verses, content, available_at });
+        }
+    },
+    async delete(req, res) {
+        const { userId } = req;
+        const { id } = req.headers;
+        if (!id) return res.status(404).json({ error: 'No id provided.' })
+        const user = await connection('users')
+            .innerJoin('users_access', 'users.access_level', 'users_access.level')
+            .select('name', 'access_level', 'email', 'user_type')
+            .where('id', userId)
+            .first();
+        if (!user) return res.status(403).json({ error: 'Invalid credentials.' });
+        const { level: master_level } = await connection('users_access')
+            .select('level')
+            .where('user_type', 'master_user')
+            .first();
+
+        if (user.access_level < master_level) return res.status(403).json({ error: 'No rights to delete devotional.' });
+
+        const devotional = await connection('devotional')
+            .delete()
+            .where('id', id);
+        if (devotional === 1) return res.json({ info: 'Deleted.' })
+
+        return res.status(404).json({ error: 'Devotional not found.' })
     }
 }

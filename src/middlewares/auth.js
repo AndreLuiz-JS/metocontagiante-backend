@@ -1,5 +1,6 @@
 require('dotenv/config');
 const jwt = require('jsonwebtoken');
+const connection = require('../database/connection');
 
 module.exports = (req, res, next) => {
     const authHeader = req.headers.authorization;
@@ -16,6 +17,13 @@ module.exports = (req, res, next) => {
     jwt.verify(token, process.env.SECRET_HASH, (err, decoded) => {
         if (err) return res.status(403).json({ error: 'Access denied.' })
         req.userId = decoded.id;
+
+        const user = connection('users')
+            .select('email')
+            .where('id', req.userId)
+            .first();
+        if (!user) return res.status(400).json({ error: 'Invalid token provided.' })
+
         return next();
     })
 }

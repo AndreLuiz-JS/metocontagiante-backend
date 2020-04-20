@@ -19,10 +19,12 @@ routes.post('/auth', AuthController.login);
 
 //Rotas autenticadas
 
-routes.get('/auth', authmiddleware, AuthController.auth);
+routes.get('/auth', authmiddleware, AuthController.index);
 
 routes.get('/devotional/all', authmiddleware, DevotionalController.listAll);
 routes.post('/devotional', authmiddleware, DevotionalController.create);
+routes.put('/devotional', authmiddleware, DevotionalController.edit);
+routes.delete('/devotional', authmiddleware, DevotionalController.delete);
 
 routes.get('/user', authmiddleware, UserController.index);
 routes.put('/user', authmiddleware, UserController.update);
