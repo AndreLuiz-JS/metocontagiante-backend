@@ -31,11 +31,8 @@ module.exports = {
 
   staging: {
     client: 'postgresql',
-    connection: {
-      database: 'my_db',
-      user: 'username',
-      password: 'password'
-    },
+    connection: process.env.PG_CONNECTION_STRING,
+    searchPath: [ 'knex', 'public' ],
     pool: {
       min: 2,
       max: 10
