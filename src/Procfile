@@ -1,1 +1,4 @@
-web: yarn start
+web:npx knex migrate:latest
+web:npx knex seed:run --specific=seed_users_access.js
+web:npx knex seed:run --specific=seed_master_user.js
+web:npm run start
