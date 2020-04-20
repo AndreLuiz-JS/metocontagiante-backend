@@ -97,7 +97,6 @@ module.exports = {
     async changeRights(req, res) {
         const { userId } = req;
         const { email, password, emailToChangeAccess, user_type } = req.body;
-        console.log(req.body)
         const admin = await connection('users_access')
             .select('level')
             .where('user_type', 'administrator_user')
