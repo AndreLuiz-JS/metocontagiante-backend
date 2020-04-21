@@ -6,9 +6,7 @@ const cors = require('cors');
 const app = express();
 app.use(express.json());
 app.use(cors({
-    origin: [ 'https://metocontagiante.netlify.app',
-        'https://metocontagiante-backend.herokuapp.com/',
-        'http://localhost:3000' ]
+    
 }));
 
 
