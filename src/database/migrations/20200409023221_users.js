@@ -7,7 +7,7 @@ exports.up = function (knex) {
         table.string('password').notNullable();
         table.string('token');
         table.boolean('change_pwd').defaultTo(false);
-        table.integer('access_level').references('id').inTable('users_access').defaultTo(0);
+        table.integer('access_level').references('level').inTable('users_access').defaultTo(0);
     })
 };
 
