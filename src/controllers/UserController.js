@@ -37,8 +37,21 @@ module.exports = {
     },
     async create(req, res) {
         const id = generateUniqueId();
-        const { name, email, password } = req.body;
+        const { name, email, password, captcha } = req.body;
+        if (!captcha) return res.status(400).json({ error: 'No captcha provided.' });
+        if (!name || name.length < 2 || name.length > 30) return res.status(400).json({ error: 'Invalid name or no name provided.' });
+        if (!validateEmail(email)) return res.status(400).json({ error: 'Invalid email or no email provided.' });
+        if (!password || password.length < 6 || password.length > 30) return res.status(400).json({ error: 'Invalid password or no password provided.' });
+
+        const api = require('../services/googleCaptcha');
+        api.params.append('response', captcha);
+
+        const response = await api.connect.post('', api.params);
+        if (!response) return res.status(404).json({ error: `Can't verify Captcha. Google not respond.` })
+        if (!response.data.success) return res.status(400).json({ error: 'Captcha error ', data: response.data });
+
         const hash = await bcrypt.encrypt(password);
+
         try {
             await connection('users').insert({
                 id,
@@ -49,7 +62,7 @@ module.exports = {
             const token = jwt.sign({ id }, process.env.SECRET_HASH, { expiresIn: '5 days' });
             return res.json({ token })
         } catch (err) {
-            return res.status(400).json({ error: `${email} already registred.`, code: err.code })
+            return res.status(403).json({ error: `Email already registred.`, code: err.code })
         }
     },
     async update(req, res) {
@@ -60,7 +73,7 @@ module.exports = {
             .select('*')
             .first();
 
-        if (!user) return res.status(400).json({ error: 'Invalid token' });
+        if (!user) return res.status(403).json({ error: 'Invalid token' });
 
         if (!await bcrypt.compare(password, user.password)) return res.status(403).json({ error: 'Invalid password.' });
 
@@ -77,7 +90,7 @@ module.exports = {
                 .select('email')
                 .where('email', email)
                 .first();
-            if (registredEmail) return res.status(400).json({ error: 'Email já registrado' });
+            if (registredEmail) return res.status(403).json({ error: 'Email já registrado' });
             await connection('users')
                 .where({ id: userId })
                 .update({
@@ -109,7 +122,7 @@ module.exports = {
 
         if (!user || user.access_level < admin.level) return res.status(403).json({ error: 'Forbidden' });
         if (user.email !== email) return res.status(400).json({ error: 'Email incorreto.' });
-        if (!await bcrypt.compare(password, user.password)) return res.status(404).json({ error: 'Invalid password.' });
+        if (!await bcrypt.compare(password, user.password)) return res.status(400).json({ error: 'Invalid password.' });
 
         const newAccess = await connection('users_access')
             .select('level')
@@ -127,4 +140,20 @@ module.exports = {
 
     }
 
+}
+
+function validateEmail(email) {
+    if (!email) return false;
+    if (email.indexOf('@') === -1) return false;
+
+    const [ user, domain ] = email.split('@');
+    if (user.length < 3) return false
+    if (domain.indexOf('.') === -1) return false;
+
+    const [ server, topDomain ] = domain.split('.');
+    if (server.length < 3) return false;
+
+    if (topDomain.length < 2) return false;
+
+    return true;
 }
