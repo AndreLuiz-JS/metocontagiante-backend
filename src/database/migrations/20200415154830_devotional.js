@@ -4,7 +4,7 @@ exports.up = function (knex) {
         table.increments('id');
         table.string('title').notNullable();
         table.string('verses');
-        table.string('content').notNullable();
+        table.text('content').notNullable();
         table.binary('image');
         table.boolean('visible').notNullable();
         table.string('user_id').references('id').inTable('users');
