@@ -6,11 +6,14 @@ const BibleController = require("./controllers/BibleController");
 const DevotionalController = require("./controllers/DevotionalController");
 const UserController = require("./controllers/UserController");
 const AuthController = require("./controllers/AuthController");
+const GoogleCalendarController = require("./controllers/GoogleCalendarController");
 
 routes.get('/bible', BibleController.index);
 routes.get('/bible/:bookName', BibleController.showBook);
 routes.get('/bible/:bookName/:chapterNumber', BibleController.showChapter);
 routes.get('/bible/:bookName/:chapterNumber/:verseRange', BibleController.showVerseRange);
+
+routes.get('/calendar', GoogleCalendarController);
 
 routes.get('/devotional', DevotionalController.index);
 
