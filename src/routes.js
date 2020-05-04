@@ -7,6 +7,7 @@ const DevotionalController = require("./controllers/DevotionalController");
 const UserController = require("./controllers/UserController");
 const AuthController = require("./controllers/AuthController");
 const GoogleCalendarController = require("./controllers/GoogleCalendarController");
+const GooglePhotosController = require("./controllers/GooglePhotosController");
 
 routes.get('/bible', BibleController.index);
 routes.get('/bible/:bookName', BibleController.showBook);
@@ -14,6 +15,9 @@ routes.get('/bible/:bookName/:chapterNumber', BibleController.showChapter);
 routes.get('/bible/:bookName/:chapterNumber/:verseRange', BibleController.showVerseRange);
 
 routes.get('/calendar', GoogleCalendarController);
+
+routes.get('/photos', GooglePhotosController.index);
+routes.get('/photos/:id', GooglePhotosController.listAlbum);
 
 routes.get('/devotional', DevotionalController.index);
 
