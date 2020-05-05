@@ -28,6 +28,7 @@ module.exports = {
     },
     async listAlbum(req, res) {
         const { id } = req.params;
+        if (typeof id !== 'string') return res.status(400).json({ error: 'Invalid id' });
         fs.readFile('./src/secrets/googlePhotosCredentials.json', (err, content) => {
             if (err) return ('Error loading client secret file:', err);
             authorize(JSON.parse(content), listPhotos);
@@ -37,7 +38,7 @@ module.exports = {
             try {
                 const photoList = await axios.post('https://photoslibrary.googleapis.com/v1/mediaItems:search', { "pageSize": "30", albumId: id }, { headers: { Authorization: 'Bearer ' + auth.credentials.access_token, } });
                 const { data } = photoList;
-                return res.json({ data });
+                return res.json(data);
             } catch (error) {
                 console.log(error.response.data);
                 refreshToken(listPhotos);
