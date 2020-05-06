@@ -101,8 +101,6 @@ module.exports = {
     async edit(req, res) {
         const { userId } = req;
         const { id, title, verses, content, available_at, visible } = req.body;
-        const now = new Date();
-        const created_at = now.toISOString();
         const user = await connection('users')
             .innerJoin('users_access', 'users.access_level', 'users_access.level')
             .select('name', 'access_level', 'email', 'user_type')
