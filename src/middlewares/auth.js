@@ -14,15 +14,14 @@ module.exports = (req, res, next) => {
 
     if (!/^Bearer$/i.test(scheme)) return res.status(401).json({ error: 'No Bearer information found.' })
 
-    jwt.verify(token, process.env.SECRET_HASH, (err, decoded) => {
+    jwt.verify(token, process.env.SECRET_HASH, async (err, decoded) => {
         if (err) return res.status(403).json({ error: 'Access denied.' })
-        req.userId = decoded.id;
-
-        const user = connection('users')
+        const user = await connection('users')
             .select('email')
-            .where('id', req.userId)
+            .where('id', decoded.id)
             .first();
         if (!user) return res.status(400).json({ error: 'Invalid token provided.' })
+        req.userId = decoded.id;
 
         return next();
     })

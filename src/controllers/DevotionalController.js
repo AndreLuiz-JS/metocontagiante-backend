@@ -23,8 +23,6 @@ module.exports = {
             .where('id', userId)
             .first();
 
-        if (!user) return res.status(403).json({ error: 'Invalid token provided.' });
-
         const { level: post_level } = await connection('users_access')
             .select('level')
             .where('user_type', 'post_user')
@@ -65,7 +63,6 @@ module.exports = {
             .select('name', 'access_level', 'email', 'user_type')
             .where('id', userId)
             .first();
-        if (!user) return res.status(403).json({ error: 'Invalid credentials.' });
 
         const { level: post_level } = await connection('users_access')
             .select('level')
@@ -106,7 +103,6 @@ module.exports = {
             .select('name', 'access_level', 'email', 'user_type')
             .where('id', userId)
             .first();
-        if (!user) return res.status(403).json({ error: 'Invalid credentials.' });
 
         const { level: post_level } = await connection('users_access')
             .select('level')
@@ -150,7 +146,6 @@ module.exports = {
             .select('name', 'access_level', 'email', 'user_type')
             .where('id', userId)
             .first();
-        if (!user) return res.status(403).json({ error: 'Invalid credentials.' });
         const { level: master_level } = await connection('users_access')
             .select('level')
             .where('user_type', 'master_user')

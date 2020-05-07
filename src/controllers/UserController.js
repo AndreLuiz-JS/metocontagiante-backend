@@ -73,8 +73,6 @@ module.exports = {
             .select('*')
             .first();
 
-        if (!user) return res.status(403).json({ error: 'Invalid token' });
-
         if (!await bcrypt.compare(password, user.password)) return res.status(403).json({ error: 'Invalid password.' });
 
         if (newPassword) {
@@ -120,7 +118,7 @@ module.exports = {
             .select('name', 'email', 'password', 'access_level')
             .first();
 
-        if (!user || user.access_level < admin.level) return res.status(403).json({ error: 'Forbidden' });
+        if (user.access_level < admin.level) return res.status(403).json({ error: 'Forbidden' });
         if (user.email !== email) return res.status(400).json({ error: 'Email incorreto.' });
         if (!await bcrypt.compare(password, user.password)) return res.status(400).json({ error: 'Invalid password.' });
 
