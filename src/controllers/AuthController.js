@@ -6,12 +6,16 @@ const jwt = require('jsonwebtoken');
 module.exports = {
     async login(req, res) {
         const { email, password } = req.body;
+        if (!email) return res.status(400).json({ error: 'No email provided.' });
+        if (!password) return res.status(400).json({ error: 'No password provided.' });
         try {
             const user = await connection('users')
                 .select('*')
                 .where('email', email)
-                .where('access_level', '>=', 0)
                 .first();
+
+            if (!user) return res.status(400).json({ error: 'User not found' });
+            if (user.access_level < 0) return res.status(400).json({ error: 'User banned.' });
             if (!await bcrypt.compare(password, user.password)) return res.status(404).json({ error: 'Invalid password.' })
             if (user.change_pwd) {
                 const token = jwt.sign({ id: user.id }, process.env.SECRET_HASH, { expiresIn: '10 minutes' });
@@ -24,7 +28,8 @@ module.exports = {
             return res.json({ email, token })
         }
         catch (err) {
-            return res.status(400).json(err)
+            console.log(err)
+            return res.status(400).json({ err })
         }
     },
     async index(req, res) {

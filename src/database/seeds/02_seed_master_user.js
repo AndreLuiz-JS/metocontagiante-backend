@@ -16,8 +16,8 @@ exports.seed = async function (knex) {
   return knex('users').del()
     .then(function () {
       // Inserts seed entries
-      return knex('users').insert([
+      return knex('users').insert(
         { id, name: MASTER_NAME, email: MASTER_EMAIL, password, access_level: level }
-      ]);
+      );
     });
 };

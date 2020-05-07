@@ -4,6 +4,7 @@ const authmiddleware = require('./middlewares/auth');
 
 const BibleController = require("./controllers/BibleController");
 const DevotionalController = require("./controllers/DevotionalController");
+const CellController = require("./controllers/CellController");
 const UserController = require("./controllers/UserController");
 const AuthController = require("./controllers/AuthController");
 const GoogleCalendarController = require("./controllers/GoogleCalendarController");
@@ -20,6 +21,7 @@ routes.get('/photos', GooglePhotosController.index);
 routes.get('/photos/:id', GooglePhotosController.listAlbum);
 
 routes.get('/devotional', DevotionalController.index);
+routes.get('/cells', CellController.index);
 
 routes.post('/user', UserController.create);
 routes.post('/auth', AuthController.login);
@@ -32,6 +34,10 @@ routes.get('/devotional/all', authmiddleware, DevotionalController.listAll);
 routes.post('/devotional', authmiddleware, DevotionalController.create);
 routes.put('/devotional', authmiddleware, DevotionalController.edit);
 routes.delete('/devotional', authmiddleware, DevotionalController.delete);
+
+routes.post('/cell', authmiddleware, CellController.create);
+routes.put('/cell/:id', authmiddleware, CellController.edit);
+routes.delete('/cell/:id', authmiddleware, CellController.delete);
 
 routes.get('/user', authmiddleware, UserController.index);
 routes.put('/user', authmiddleware, UserController.update);
