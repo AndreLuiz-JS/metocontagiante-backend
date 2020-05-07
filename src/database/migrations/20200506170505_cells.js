@@ -2,7 +2,7 @@
 exports.up = function (knex) {
     return knex.schema.createTable('cells', function (table) {
         table.increments('id');
-        table.binary('image', 1024 * 300);
+        table.text('image', 1024 * 350);
         table.string('name').notNullable();
         table.string('leader').notNullable();
         table.string('phone').notNullable();
