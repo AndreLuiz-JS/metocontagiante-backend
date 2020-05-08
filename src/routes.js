@@ -1,6 +1,11 @@
 const express = require('express');
 const routes = express.Router();
 const authmiddleware = require('./middlewares/auth');
+const multer = require('multer')
+const upload = multer({
+    buffer: './assets/pdf',
+    mimetype: 'application/pdf',
+});
 
 const BibleController = require("./controllers/BibleController");
 const DevotionalController = require("./controllers/DevotionalController");
@@ -9,6 +14,7 @@ const UserController = require("./controllers/UserController");
 const AuthController = require("./controllers/AuthController");
 const GoogleCalendarController = require("./controllers/GoogleCalendarController");
 const GooglePhotosController = require("./controllers/GooglePhotosController");
+const AdvertController = require("./controllers/AdvertController");
 
 routes.get('/bible', BibleController.index);
 routes.get('/bible/:bookName', BibleController.showBook);
@@ -25,6 +31,8 @@ routes.get('/cells', CellController.index);
 
 routes.post('/user', UserController.create);
 routes.post('/auth', AuthController.login);
+
+routes.get('/advert', AdvertController.index)
 
 //Rotas autenticadas
 
@@ -44,6 +52,7 @@ routes.put('/user', authmiddleware, UserController.update);
 
 routes.patch('/user', authmiddleware, UserController.changeRights)
 
+routes.post('/advert', authmiddleware, upload.single('file'), AdvertController.post)
 
 
 module.exports = routes;
