@@ -33,6 +33,7 @@ routes.post('/user', UserController.create);
 routes.post('/auth', AuthController.login);
 
 routes.get('/advert', AdvertController.index)
+routes.get('/advert/time', AdvertController.archiveDate)
 
 //Rotas autenticadas
 
