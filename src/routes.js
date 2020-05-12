@@ -3,7 +3,7 @@ const routes = express.Router();
 const authmiddleware = require('./middlewares/auth');
 const multer = require('multer')
 const upload = multer({
-    buffer: './assets/pdf',
+    buffer: './assets/pdf/advert.pdf',
     mimetype: 'application/pdf',
 });
 

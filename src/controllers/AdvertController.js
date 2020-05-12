@@ -4,17 +4,18 @@ const connection = require('../database/connection');
 module.exports = {
 
     async index(req, res) {
-        fs.stat('./assets/pdf/advert.pdf', function (err, stats) {
-            const mtime = stats.mtime;
+        try {
+            const { base64, created_at } =
+                await connection('files')
+                    .select('*')
+                    .where('id', 'advert.pdf')
+                    .first();
+            return res.json({ mtime: created_at, pdf: base64 });
+        } catch (err) {
+            if (err) return res.status(404).json({ error: 'No pdf advert file on server.' });
+        }
 
-            fs.readFile('./assets/pdf/advert.pdf', (err, content) => {
-                if (err) return res.status(404).json({ error: 'No pdf advert file on server.' });
-                const pdf = new Buffer.alloc(content.length, content).toString('base64');
-                return res.send({ mtime, pdf });
-            })
-        });
-    }
-    ,
+    },
     async post(req, res) {
         const { userId, file } = req;
         if (!file) return res.status(400).json({ error: 'No pdf file provided.' })
@@ -30,20 +31,46 @@ module.exports = {
             .first();
         if (user.access_level < post_level) return res.status(403).json({ error: 'No rights to post here.' });
         if (file.mimetype !== 'application/pdf') return res.status(403).json({ error: 'Invalid file type.' });
-        fs.readFile('./assets/pdf/advert.pdf', (err, content) => {
-            const pdf = new Buffer.alloc(content.length, content);
+        try {
+            const { id, base64 } =
+                await connection('files')
+                    .select('*')
+                    .where('id', 'advert.pdf')
+                    .first();
+            const newBase64 = file.buffer.toString('base64');
 
-            if (file.buffer.equals(pdf)) return res.status(200).json({ info: 'The file uploaded is equal to the storaged in the server.' });
-            fs.writeFileSync('./assets/pdf/advert.pdf', file.buffer)
-            return res.status(200).json({ info: 'Pdf file storaged to drive.' })
-        })
+            if (newBase64 === base64) {
+                console.log('files are equals')
+                return res.status(200).json({ info: 'The file uploaded is equal to the storaged in the server.' });
+            }
+            const created_at = new Date().toISOString();
+            if (base64) {
+                await connection('files')
+                    .update({ base64: newBase64, created_at })
+                    .where('id', id);
+                return res.json({ info: 'File updated.' });
+            }
+            if (!base64) {
+                await connection('files')
+                    .insert({ id: 'advert.pdf', base64: newBase64, created_at });
+                return res.json({ info: 'File uploaded.' });
+            }
+        } catch (err) {
+            console.log(err);
+        }
     },
     async archiveDate(req, res) {
-        fs.stat('./assets/pdf/advert.pdf', function (err, stats) {
-            if (err) return res.status(404).json({ error: 'No pdf advert file on server.' })
-            const mtime = stats.mtime;
-            return res.json({ mtime });
-        });
+        try {
+            const { created_at } =
+                await connection('files')
+                    .select('created_at')
+                    .where('id', 'advert.pdf')
+                    .first();
+            return res.json({ mtime: created_at });
+        } catch (err) {
+            if (err) return res.status(404).json({ error: 'No pdf advert file on server.' });
+        }
     }
 
 }
+
