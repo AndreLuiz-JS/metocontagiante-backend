@@ -37,12 +37,12 @@ module.exports = {
                     .select('*')
                     .where('id', 'advert.pdf')
                     .first();
+            const base64 = file.buffer.toString('base64');
             if (!data) {
                 await connection('files')
                     .insert({ id: 'advert.pdf', base64, created_at });
                 return res.json({ info: 'File uploaded.' });
             }
-            const base64 = file.buffer.toString('base64');
 
             if (base64 === data.base64) {
                 console.log('files are equals')
