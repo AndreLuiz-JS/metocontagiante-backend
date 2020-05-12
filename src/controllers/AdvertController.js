@@ -32,29 +32,27 @@ module.exports = {
         if (user.access_level < post_level) return res.status(403).json({ error: 'No rights to post here.' });
         if (file.mimetype !== 'application/pdf') return res.status(403).json({ error: 'Invalid file type.' });
         try {
-            const { id, base64 } =
+            const data =
                 await connection('files')
                     .select('*')
                     .where('id', 'advert.pdf')
                     .first();
-            const newBase64 = file.buffer.toString('base64');
+            if (!data) {
+                await connection('files')
+                    .insert({ id: 'advert.pdf', base64, created_at });
+                return res.json({ info: 'File uploaded.' });
+            }
+            const base64 = file.buffer.toString('base64');
 
-            if (newBase64 === base64) {
+            if (base64 === data.base64) {
                 console.log('files are equals')
                 return res.status(200).json({ info: 'The file uploaded is equal to the storaged in the server.' });
             }
             const created_at = new Date().toISOString();
-            if (base64) {
-                await connection('files')
-                    .update({ base64: newBase64, created_at })
-                    .where('id', id);
-                return res.json({ info: 'File updated.' });
-            }
-            if (!base64) {
-                await connection('files')
-                    .insert({ id: 'advert.pdf', base64: newBase64, created_at });
-                return res.json({ info: 'File uploaded.' });
-            }
+            await connection('files')
+                .update({ base64, created_at })
+                .where('id', 'advertd.pdf');
+            return res.json({ info: 'File updated.' });
         } catch (err) {
             console.log(err);
         }
