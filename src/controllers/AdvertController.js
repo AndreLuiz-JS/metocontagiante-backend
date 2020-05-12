@@ -46,12 +46,11 @@ module.exports = {
             }
 
             if (base64 === data.base64) {
-                console.log('files are equals')
                 return res.status(200).json({ info: 'The file uploaded is equal to the storaged in the server.' });
             }
             await connection('files')
                 .update({ base64, created_at })
-                .where('id', 'advertd.pdf');
+                .where('id', 'advert.pdf');
             return res.json({ info: 'File updated.' });
         } catch (err) {
             console.log(err);
