@@ -36,19 +36,19 @@ module.exports = {
                 .limit(30)
                 .select('devotional.id', 'title', 'verses', 'content', 'visible', 'available_at', 'created_at', 'name', 'email', 'user_type')
                 .where('users.id', userId)
-                .andWhere('visible', 0)
+                .andWhere('visible', false)
                 .orderBy('created_at', 'desc');
 
             return res.json(devotionals);
         }
         if (user.access_level > post_level) {
-            const devotionals = await connection('devotional')
+            const data = await connection('devotional')
                 .innerJoin('users', 'users.id', 'devotional.user_id')
                 .innerJoin('users_access', 'users.access_level', 'users_access.level')
                 .limit(30)
                 .select('devotional.id', 'title', 'verses', 'content', 'visible', 'available_at', 'created_at', 'name', 'email', 'user_type')
                 .orderBy('created_at', 'desc');
-
+            const devotionals = data.map(devotional => { return { ...devotional, visible: devotional.visible === 1 } })
             return res.json(devotionals);
         }
 
