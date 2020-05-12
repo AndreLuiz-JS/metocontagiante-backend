@@ -38,6 +38,7 @@ module.exports = {
                     .where('id', 'advert.pdf')
                     .first();
             const base64 = file.buffer.toString('base64');
+            const created_at = new Date().toISOString();
             if (!data) {
                 await connection('files')
                     .insert({ id: 'advert.pdf', base64, created_at });
@@ -48,7 +49,6 @@ module.exports = {
                 console.log('files are equals')
                 return res.status(200).json({ info: 'The file uploaded is equal to the storaged in the server.' });
             }
-            const created_at = new Date().toISOString();
             await connection('files')
                 .update({ base64, created_at })
                 .where('id', 'advertd.pdf');
