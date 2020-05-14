@@ -1,4 +1,3 @@
-const fs = require('fs');
 const connection = require('../database/connection');
 
 module.exports = {
