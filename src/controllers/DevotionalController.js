@@ -4,16 +4,14 @@ module.exports = {
     async index(request, response) {
         const newDate = new Date();
         const now = newDate.toISOString();
-        const devotional = await connection('devotional')
+        const devotionals = await connection('devotional')
             .where('available_at', '<', now)
             .andWhere('visible', true)
-            .limit(1)
+            .limit(30)
             .orderBy('available_at', 'desc')
             .orderBy('created_at', 'desc')
-            .select('*')
-            .first();
-
-        return response.json(devotional);
+            .select('id', 'title', 'verses', 'content', 'available_at');
+        return response.json(devotionals);
     },
     async listAll(req, res) {
         const { userId } = req;
@@ -33,7 +31,6 @@ module.exports = {
             const devotionals = await connection('devotional')
                 .innerJoin('users', 'users.id', 'devotional.user_id')
                 .innerJoin('users_access', 'users.access_level', 'users_access.level')
-                .limit(30)
                 .select('devotional.id', 'title', 'verses', 'content', 'visible', 'available_at', 'created_at', 'name', 'email', 'user_type')
                 .where('users.id', userId)
                 .andWhere('visible', false)
