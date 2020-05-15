@@ -45,7 +45,11 @@ module.exports = {
                 .limit(30)
                 .select('devotional.id', 'title', 'verses', 'content', 'visible', 'available_at', 'created_at', 'name', 'email', 'user_type')
                 .orderBy('created_at', 'desc');
-            const devotionals = data.map(devotional => { return { ...devotional, visible: devotional.visible === 1 } })
+            const devotionals = data.map(
+                devotional => {
+                    const visible = devotional.visible === 1 || devotional.visible === true;
+                    return { ...devotional, visible }
+                })
             return res.json(devotionals);
         }
 
