@@ -24,7 +24,6 @@ module.exports = {
                     .select('*')
                     .where('id', 'advert')
                     .first();
-            await fs.writeFileSync('./assets/advert.jpg', response.data);
             const jpg = decoder.write(response.data);
             return res.json({ mtime, jpg, hash });
         } catch (err) {
