@@ -47,7 +47,7 @@ module.exports = {
             .where('user_type', 'post_user')
             .first();
         if (user.access_level < post_level) return res.status(403).json({ error: 'No rights to post here.' });
-        if ([ 'image/jpg', 'image/png' ].indexOf(file.mimetype) === -1) return res.status(403).json({ error: 'Invalid file type.' });
+        if ([ 'image/jpg', 'image/jpeg' ].indexOf(file.mimetype) === -1) return res.status(403).json({ error: 'Invalid file type.' });
         try {
             const { content_hash: base64 } = (await dropBox.post('upload?arg={"path":"/advert/advert.jpg","mode":{".tag":"overwrite"},    "autorename":false,"mute":false,"strict_conflict":false}', file.buffer, {
                 headers: {
