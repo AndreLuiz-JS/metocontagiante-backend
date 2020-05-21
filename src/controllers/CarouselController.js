@@ -8,7 +8,7 @@ module.exports = {
             const response =
                 await connection('files')
                     .select('*')
-                    .whereNot('id', 'advert.pdf')
+                    .whereNot('id', 'advert')
             return res.json(response);
         } catch (err) {
             if (err) return res.status(404).json({ error: 'No images file on server.' });
