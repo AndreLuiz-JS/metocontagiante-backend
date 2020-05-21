@@ -9,6 +9,7 @@ module.exports = {
                 await connection('files')
                     .select('*')
                     .whereNot('id', 'advert')
+                    .andWhereNot('id', 'cellstudy')
             return res.json(response);
         } catch (err) {
             if (err) return res.status(404).json({ error: 'No images file on server.' });

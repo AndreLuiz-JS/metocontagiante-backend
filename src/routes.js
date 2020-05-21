@@ -15,6 +15,7 @@ const AuthController = require("./controllers/AuthController");
 const GoogleCalendarController = require("./controllers/GoogleCalendarController");
 const GooglePhotosController = require("./controllers/GooglePhotosController");
 const AdvertController = require("./controllers/AdvertController");
+const CellStudyController = require("./controllers/CellStudyController");
 const CarouselController = require("./controllers/CarouselController");
 
 routes.get('/bible', BibleController.index);
@@ -34,7 +35,12 @@ routes.post('/user', UserController.create);
 routes.post('/auth', AuthController.login);
 
 routes.get('/advert', AdvertController.index);
+routes.get('/advert/file', AdvertController.getFile);
+routes.get('/cellstudy', CellStudyController.index);
+routes.get('/cellstudy/file', CellStudyController.getFile);
 routes.get('/advert/time', AdvertController.archiveDate);
+routes.get('/cellstudy/time', AdvertController.archiveDate);
+
 routes.get('/carousel', CarouselController.index);
 
 //Rotas autenticadas
@@ -56,6 +62,7 @@ routes.put('/user', authmiddleware, UserController.update);
 routes.patch('/user', authmiddleware, UserController.changeRights);
 
 routes.post('/advert', authmiddleware, upload.single('file'), AdvertController.post)
+routes.post('/cellstudy', authmiddleware, upload.single('file'), CellStudyController.post)
 routes.post('/carousel', authmiddleware, upload.single('file'), CarouselController.post)
 routes.delete('/carousel/:id', authmiddleware, CarouselController.delete)
 

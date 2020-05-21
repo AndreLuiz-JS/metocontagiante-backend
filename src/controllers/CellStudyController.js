@@ -12,19 +12,19 @@ module.exports = {
                 {
                     responseType: 'arraybuffer',
                     headers: {
-                        "Content-Type": "application/octet-stream; charset=utf-8",
+                        "Content-Type": "application/octet-stream",
                         "Authorization": Authorization,
-                        'Dropbox-API-Arg': '{ "path": "/advert/advert.jpg" }',
+                        'Dropbox-API-Arg': '{"path":"/cell/Estudo_de_Celula_Metodista_Contagiante.pdf"}',
                     }
                 }
             );
             const { created_at: mtime, base64: hash } =
                 await connection('files')
                     .select('*')
-                    .where('id', 'advert')
+                    .where('id', 'cellstudy')
                     .first();
-            const jpg = decoder.write(response.data);
-            return res.json({ mtime, jpg, hash });
+            const pdf = decoder.write(response.data);
+            return res.json({ mtime, pdf, hash });
         } catch (err) {
             console.log(err);
             if (err) return res.status(404).json({ error: 'File not found.' });
@@ -35,7 +35,7 @@ module.exports = {
         try {
             const response = await dropBox.metadata.post('get_temporary_link',
                 {
-                    path: '/advert/advert.jpg'
+                    path: '/cell/Estudo_de_Celula_Metodista_Contagiante.pdf'
                 },
                 {
                     headers: {
@@ -64,9 +64,9 @@ module.exports = {
             .where('user_type', 'post_user')
             .first();
         if (user.access_level < post_level) return res.status(403).json({ error: 'No rights to post here.' });
-        if ([ 'image/jpg', 'image/jpeg' ].indexOf(file.mimetype) === -1) return res.status(403).json({ error: 'Invalid file type.' });
+        if (file.mimetype !== 'application/pdf') return res.status(403).json({ error: 'Invalid file type.' });
         try {
-            const { content_hash: base64 } = (await dropBox.files.post('upload?arg={"path":"/advert/advert.jpg","mode":{".tag":"overwrite"},    "autorename":false,"mute":false,"strict_conflict":false}', file.buffer, {
+            const { content_hash: base64 } = (await dropBox.files.post('upload?arg={"path":"/cell/Estudo_de_Celula_Metodista_Contagiante.pdf","mode":{".tag":"overwrite"},    "autorename":false,"mute":false,"strict_conflict":false}', file.buffer, {
                 headers: {
                     Authorization,
                     "Content-Type": "application/octet-stream"
@@ -75,17 +75,17 @@ module.exports = {
             const data =
                 await connection('files')
                     .select('*')
-                    .where('id', 'advert')
+                    .where('id', 'cellstudy')
                     .first();
             const created_at = new Date().toISOString();
             if (!data) {
                 await connection('files')
-                    .insert({ id: 'advert', base64, created_at });
+                    .insert({ id: 'cellstudy', base64, created_at });
                 return res.json({ info: 'File uploaded.' });
             }
             await connection('files')
                 .update({ base64, created_at })
-                .where('id', 'advert');
+                .where('id', 'cellstudy');
             return res.json({ info: 'File updated.' });
         } catch (err) {
             console.log(err);
@@ -96,12 +96,12 @@ module.exports = {
             const { created_at } =
                 await connection('files')
                     .select('created_at')
-                    .where('id', 'advert')
+                    .where('id', 'cellstudy')
                     .first();
             return res.json({ mtime: created_at });
         } catch (err) {
             console.log(err)
-            if (err) return res.status(404).json({ error: 'No advert file on server.' });
+            if (err) return res.status(404).json({ error: 'No file on server.' });
         }
     }
 
