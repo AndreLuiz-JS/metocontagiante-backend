@@ -67,14 +67,14 @@ module.exports = {
     },
     async lastUpdate(req, res) {
         try {
-            const lastUpdate =
+            const { created_at: lastUpdated } =
                 await connection('files')
                     .select('created_at')
                     .whereNot('id', 'advert')
                     .andWhereNot('id', 'cellstudy')
                     .orderBy('created_at', 'desc')
                     .first();
-            return res.json({ lastUpdate });
+            return res.json({ lastUpdated });
         } catch (err) {
             return res.status(404).json({ Error: 'No file found.' })
         }
