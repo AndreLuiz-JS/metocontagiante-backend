@@ -42,6 +42,7 @@ routes.get('/advert/time', AdvertController.archiveDate);
 routes.get('/cellstudy/time', AdvertController.archiveDate);
 
 routes.get('/carousel', CarouselController.index);
+routes.get('/carousel/lastUpdate', CarouselController.lastUpdate);
 
 //Rotas autenticadas
 

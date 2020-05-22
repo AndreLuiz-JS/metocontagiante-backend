@@ -64,6 +64,20 @@ module.exports = {
         if (response === 1) return res.json({ info: 'Deleted.' })
 
         return res.status(404).json({ error: 'File not found.' })
+    },
+    async lastUpdate(req, res) {
+        try {
+            const lastUpdate =
+                await connection('files')
+                    .select('created_at')
+                    .whereNot('id', 'advert')
+                    .andWhereNot('id', 'cellstudy')
+                    .orderBy('created_at', 'desc')
+                    .first();
+            return res.json({ lastUpdate });
+        } catch (err) {
+            return res.status(404).json({ Error: 'No file found.' })
+        }
     }
 
 }
