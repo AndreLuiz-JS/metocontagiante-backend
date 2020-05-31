@@ -56,13 +56,13 @@ function activatePushNotificationInterval() {
     const intervalId = setInterval(verifyItensToPush, 60000);
 
     async function verifyItensToPush() {
-        const now = new Date().toISOString();
+        const now = new Date();
         const response = await connection('devotional')
             .select('id', 'available_at')
-            .where('notified', false);
-
+            .where('notified', false)
+            .andWhere('visible', true);
+        console.log(`${response.length} devotionals waiting to be notified.`)
         if (response.length === 0) clearInterval(intervalId);
-
         for (let devotional of response) {
             if (now > devotional.available_at) {
                 const { title, content } = await connection('devotional')

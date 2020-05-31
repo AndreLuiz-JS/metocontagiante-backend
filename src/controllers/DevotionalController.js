@@ -72,7 +72,7 @@ module.exports = {
             .first();
         if (user.access_level < post_level) return res.status(403).json({ error: 'No rights to post.' });
         if (user.access_level === post_level) {
-            const devotional = await connection('devotional').insert({
+            await connection('devotional').insert({
                 user_id: userId,
                 title,
                 verses,
@@ -84,24 +84,29 @@ module.exports = {
             return res.json({ id: devotional, title, verses, content, available_at })
         }
         if (user.access_level > post_level) {
-            const [ devotional ] = await connection('devotional').insert({
-                user_id: userId,
-                title,
-                verses,
-                content,
-                available_at,
-                created_at,
-                visible
-            });
-            if (visible && available_at < created_at) {
+            const devotional = await connection('devotional')
+                .insert({
+                    user_id: userId,
+                    title,
+                    verses,
+                    content,
+                    available_at,
+                    created_at,
+                    visible
+                });
+            if ((visible === 1 || visible === true) && now >= new Date(available_at)) {
                 expoPushNotification.push('#Devocional Contagiante', `${title} \n\n ${content}`, 'Devotional');
                 console.log(`Notified all users devotional ${title} - ${available_at}`)
+                const { id } = await connection('devotional')
+                    .select('id')
+                    .orderBy('created_at', 'desc')
+                    .first();
                 await connection('devotional')
                     .update({ notified: true })
-                    .where('id', devotional)
+                    .where('id', id);
             }
 
-            if (visible && available_at > created_at)
+            if ((visible === 1 || visible === true) && now < available_at)
                 expoPushNotification.activatePushNotificationInterval();
 
             return res.json({ id: devotional, title, verses, content, available_at })
@@ -112,7 +117,6 @@ module.exports = {
         const { userId } = req;
         const { id, title, verses, content, available_at, visible } = req.body;
         const now = new Date();
-        const currentTime = now.toISOString();
         const user = await connection('users')
             .innerJoin('users_access', 'users.access_level', 'users_access.level')
             .select('name', 'access_level', 'email', 'user_type')
@@ -126,6 +130,10 @@ module.exports = {
 
         if (user.access_level < post_level) return res.status(403).json({ error: 'No rights to change devotional.' });
 
+        const { visible: oldVisible, notified } = await connection('devotional')
+            .select('visible', 'notified')
+            .where('id', id)
+            .first();
         if (user.access_level === post_level) {
             const devotional = await connection('devotional')
                 .update({
@@ -149,18 +157,20 @@ module.exports = {
                     visible
                 })
                 .where('id', id);
-            const { visible: oldVisible, notified } = await connection('devotional')
-                .select('visible', 'notified')
-                .where('id', id)
-                .first();
-            if ((oldVisible === 0 || oldVisible === false) && visible && available_at < currentTime && (notified === 0 || notified === false)) {
+            if ((oldVisible === 0 || oldVisible === false)
+                && (visible === 1 || visible === true)
+                && now >= new Date(available_at)
+                && (notified === 0 || notified === false)) {
                 expoPushNotification.push('#Devocional Contagiante', `${title} \n\n ${content}`, 'Devotional');
                 console.log(`Notified all users devotional ${title} - ${available_at}`);
                 await connection('devotional')
                     .update({ notified: true })
                     .where('id', id);
             }
-            if ((oldVisible === 0 || oldVisible === false) && visible && available_at > currentTime && (notified === 0 || notified === false))
+            if ((oldVisible === 0 || oldVisible === false)
+                && (visible === 1 || visible === true)
+                && now < new Date(available_at)
+                && (notified === 0 || notified === false))
                 expoPushNotification.activatePushNotificationInterval();
             return res.json({ id: devotional.id, title, verses, content, available_at });
         }

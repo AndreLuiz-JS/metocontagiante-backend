@@ -5,8 +5,10 @@ module.exports = {
     async register(req, res) {
         try {
             const { token } = req.body;
-            if (!Expo.isExpoPushToken(token))
+            if (!Expo.isExpoPushToken(token)) {
+                console.log(`Invalid Expo Push Token received: ${token}`);
                 return res.status(400).json({ error: 'Invalid expo push token.' });
+            }
             const response = await connection('expo_push_tokens')
                 .insert({ id: token });
             console.log(`New token added to database expo_push_token: ${token}`);
