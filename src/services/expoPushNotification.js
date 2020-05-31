@@ -51,4 +51,32 @@ async function push(title, body, page) {
     })();
 }
 
-module.exports = { push };
+function activatePushNotificationInterval() {
+    clearInterval();
+    const intervalId = setInterval(verifyItensToPush, 60000);
+
+    async function verifyItensToPush() {
+        const now = new Date().toISOString();
+        const response = await connection('devotional')
+            .select('id', 'available_at')
+            .where('notified', false);
+
+        if (response.length === 0) clearInterval(intervalId);
+
+        for (let devotional of response) {
+            if (now > devotional.available_at) {
+                const { title, content } = await connection('devotional')
+                    .select('title', 'content')
+                    .where('id', devotional.id)
+                    .first();
+                push('#Devocional Contagiante', `${title} \n\n ${content}`, 'Devotional');
+                console.log(`Notified all users devotional ${title} - ${devotional.available_at}`)
+                await connection('devotional')
+                    .update({ notified: true })
+                    .where('id', devotional.id)
+            }
+        }
+    }
+}
+
+module.exports = { push, activatePushNotificationInterval };
