@@ -17,12 +17,14 @@ module.exports = (req, res, next) => {
     jwt.verify(token, process.env.SECRET_HASH, async (err, decoded) => {
         if (err) return res.status(403).json({ error: 'Access denied.' })
         const user = await connection('users')
-            .select('email')
+            .select('email', 'token')
             .where('id', decoded.id)
             .first();
-        if (!user) return res.status(400).json({ error: 'Invalid token provided.' })
+        if (!user) return res.status(400).json({ error: 'Invalid token provided.' });
+        if (decoded.resetPwd)
+            if (user.token !== token) return res.status(403).json({ error: 'Token already used or expired.' })
         req.userId = decoded.id;
-
+        req.token = token;
         return next();
     })
 }

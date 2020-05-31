@@ -1,4 +1,5 @@
 const connection = require('../database/connection');
+const expoPushNotification = require('../services/expoPushNotification');
 
 module.exports = {
     async index(request, response) {
@@ -92,6 +93,7 @@ module.exports = {
                 created_at,
                 visible
             });
+            if (visible) expoPushNotification.push('#Devocional Contagiante', `${title} disponível no app`, 'Devotional');
             return res.json({ id: devotional, title, verses, content, available_at })
         }
 
@@ -135,6 +137,11 @@ module.exports = {
                     visible
                 })
                 .where('id', id);
+            const { visible: oldVisible } = await connection('devotional')
+                .select('visible')
+                .where('id', id)
+                .first();
+            if (oldVisible === 1 && visible) expoPushNotification.push('#Devocional Contagiante', `${title} \n\n ${content}`, 'Devotional');
             return res.json({ id: devotional.id, title, verses, content, available_at });
         }
     },

@@ -17,6 +17,7 @@ const GooglePhotosController = require("./controllers/GooglePhotosController");
 const AdvertController = require("./controllers/AdvertController");
 const CellStudyController = require("./controllers/CellStudyController");
 const CarouselController = require("./controllers/CarouselController");
+const ExpoPushTokenController = require("./controllers/ExpoPushTokenController");
 
 routes.get('/bible', BibleController.index);
 routes.get('/bible/:bookName', BibleController.showBook);
@@ -32,6 +33,7 @@ routes.get('/devotional', DevotionalController.index);
 routes.get('/cells', CellController.index);
 
 routes.post('/user', UserController.create);
+routes.post('/user/lostPwd', UserController.lostPassword);
 routes.post('/auth', AuthController.login);
 
 routes.get('/advert', AdvertController.index);
@@ -43,6 +45,8 @@ routes.get('/cellstudy/time', AdvertController.archiveDate);
 
 routes.get('/carousel', CarouselController.index);
 routes.get('/carousel/lastUpdate', CarouselController.lastUpdate);
+
+routes.post('/registerExpoPushToken', ExpoPushTokenController.register);
 
 //Rotas autenticadas
 
@@ -59,6 +63,8 @@ routes.delete('/cell/:id', authmiddleware, CellController.delete);
 
 routes.get('/user', authmiddleware, UserController.index);
 routes.put('/user', authmiddleware, UserController.update);
+
+routes.put('/user/changePwd', authmiddleware, UserController.changePwd);
 
 routes.patch('/user', authmiddleware, UserController.changeRights);
 

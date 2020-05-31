@@ -3,6 +3,7 @@ const jwt = require('jsonwebtoken');
 const connection = require('../database/connection');
 const generateUniqueId = require('../utils/generateUniqueId');
 const bcrypt = require('../utils/bcrypt');
+const sendGridMail = require('@sendgrid/mail');
 
 module.exports = {
     async index(req, res) {
@@ -136,6 +137,59 @@ module.exports = {
         console.log(`User ${user.name}: ${user.email} changed access level of ${emailToChangeAccess} to ${user_level}`);
         return res.json({ info: `User access level ${emailToChangeAccess} changed.` })
 
+    },
+    async lostPassword(req, res) {
+        const { email: mailTo, captcha } = req.body;
+        if (!captcha) return res.status(400).json({ error: 'No captcha provided.' });
+        if (!validateEmail(mailTo)) return res.status(400).json({ error: 'Invalid email or no email provided.' });
+
+        const api = require('../services/googleCaptcha');
+        api.params.append('response', captcha);
+        const response = await api.connect.post('', api.params);
+        if (!response) return res.status(404).json({ error: `Can't verify Captcha. Google not respond.` })
+        if (!response.data.success) return res.status(400).json({ error: 'Captcha error ', data: response.data });
+        try {
+            const user = await connection('users')
+                .select('*')
+                .where('email', mailTo)
+                .first();
+
+            if (!user) return res.status(400).json({ error: 'Email not found' });
+            if (user.access_level < 0) return res.status(400).json({ error: 'User banned.' });
+            sendGridMail.setApiKey(process.env.SENDGRID_API_KEY);
+            const token = jwt.sign({ id: user.id, resetPwd: true }, process.env.SECRET_HASH, { expiresIn: '10 minutes' })
+            const link = process.env.NODE_ENV === 'production' ? `https://metocontagiante-1588597834605.web.app/${token}` : `http://localhost:3000/${token}`;
+            await connection('users')
+                .update('token', token)
+                .where('email', mailTo);
+            const msg = {
+                to: mailTo,
+                from: 'metocontagiante@gmail.com',
+                subject: 'Recuperação de senha Metodista Contagiante',
+                html: `Olá <strong>${user.name}</strong>,<br /><br />Foi solicitado uma troca de senha no site da Metodista Contagiante. Para continuar com a troca de senha clique no link abaixo <br /><a href=${link}>${link}</a><br /><br />Este link é valido por 10 minutos somente<br />Caso não tenha solicitado a troca de senha, não se preocupe, sua conta permanece segura com sua senha atual.`
+            };
+            sendGridMail.send(msg);
+            return res.json({ info: 'Mail sent.' });
+        } catch (err) {
+            return res.status(500).json({ err });
+        }
+    },
+    async changePwd(req, res) {
+        const { password } = req.body;
+        const { userId, token } = req;
+        const user = await connection('users')
+            .select('*')
+            .where('id', userId)
+            .first();
+        if (!user || !token || user.token !== token) return res.status(403).json({ error: 'Link expired or already used.' })
+        const hash = await bcrypt.encrypt(password);
+        await connection('users')
+            .where({ id: userId })
+            .update({
+                password: hash,
+                token: '',
+            });
+        return res.json({ info: 'Password changed.' })
     }
 
 }
