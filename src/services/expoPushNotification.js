@@ -4,12 +4,12 @@ const connection = require('../database/connection');
 let expo = new Expo();
 
 async function push(title, body, page) {
-    const pushTokens = await connection('expoPushTokens')
+    const pushTokens = await connection('expo_push_tokens')
         .select('id');
     const messages = [];
     for (let pushToken of pushTokens) {
         if (!Expo.isExpoPushToken(pushToken.id)) {
-            await connection('expoPushTokens')
+            await connection('expo_push_tokens')
                 .delete()
                 .where('id', pushToken.id)
             continue;
