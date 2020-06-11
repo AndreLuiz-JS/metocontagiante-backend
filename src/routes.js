@@ -31,6 +31,7 @@ routes.get('/photos/:id', GooglePhotosController.listAlbum);
 
 routes.get('/devotional', DevotionalController.index);
 routes.get('/cells', CellController.index);
+routes.get('/cells/:geolocation', CellController.index);
 
 routes.post('/user', UserController.create);
 routes.post('/user/lostPwd', UserController.lostPassword);
