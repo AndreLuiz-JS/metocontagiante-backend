@@ -13,7 +13,8 @@ module.exports = {
     const userLongitude = Number(userLongitudeString);
     const cellsOrdered = [];
     for (let cell of cells) {
-      const { latitude, longitude } = cell;
+      const latitude = Number(cell.latitude);
+      const longitude = Number(cell.longitude);
       const distance = calculateDistance({ lat: userLatitude, long: userLongitude }, { lat: latitude, long: longitude });
       cellsOrdered.push({ ...cell, distance });
     }
@@ -74,7 +75,7 @@ module.exports = {
       const url = encodeURI(`https://maps.googleapis.com/maps/api/geocode/json?address=${location}, São Pedro da Aldeia - RJ&key=${process.env.GOOGLE_GEOCODE_API_SECRET}`);
       const { data } = await axios.get(url);
       const [ result ] = data.results;
-      const { lat: latitude, lng: longitude } = result.geometry.location
+      const { lat: latitude, lng: longitude } = result ? result.geometry.location : { lat: null, lng: null };
       const cell = await connection("cells").insert({
         image,
         name,
@@ -121,7 +122,7 @@ module.exports = {
       const url = encodeURI(`https://maps.googleapis.com/maps/api/geocode/json?address=${location}, São Pedro da Aldeia - RJ&key=${process.env.GOOGLE_GEOCODE_API_SECRET}`);
       const { data } = await axios.get(url);
       const [ result ] = data.results;
-      const { lat: latitude, lng: longitude } = result.geometry.location
+      const { lat: latitude, lng: longitude } = result ? result.geometry.location : { lat: null, lng: null };
       const cell = await connection("cells")
         .update({
           image,
