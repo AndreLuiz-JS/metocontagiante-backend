@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "",
   "engines": {
-    "node": "~14.17.0"
+    "node": "~12.16.x"
   },
   "main": "index.js",
   "scripts": {
@@ -23,9 +23,9 @@
     "express": "^4.17.1",
     "googleapis": "^75.0.0",
     "jsonwebtoken": "^8.5.1",
-    "knex": "^0.20.13",
+    "knex": "<=0.21.1",
     "multer": "^1.4.2",
-    "pg": "^8.0.2",
+    "pg": "~8.0.3",
     "node-notifier": ">=8.0.1"
   },
   "devDependencies": {
